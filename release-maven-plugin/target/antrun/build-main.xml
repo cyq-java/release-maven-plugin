@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="maven-antrun-" default="main"  >
+<target name="main">
+  <unzip src="C:\Users\lenovo\git\release-maven-plugin-parent\release-maven-plugin\target/release-maven-plugin-1.0-SNAPSHOT.jar" dest="C:\Users\lenovo\git\release-maven-plugin-parent\release-maven-plugin\target/tmp"/>
+</target>
+</project>

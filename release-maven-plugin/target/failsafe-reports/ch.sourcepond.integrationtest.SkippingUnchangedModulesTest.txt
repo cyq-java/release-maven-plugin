@@ -1,0 +1,7 @@
+-------------------------------------------------------------------------------
+Test set: ch.sourcepond.integrationtest.SkippingUnchangedModulesTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0 sec <<< FAILURE! - in ch.sourcepond.integrationtest.SkippingUnchangedModulesTest
+ch.sourcepond.integrationtest.SkippingUnchangedModulesTest  Time elapsed: 0 sec  <<< ERROR!
+java.lang.NoClassDefFoundError: Could not initialize class ch.sourcepond.integrationtest.utils.MvnRunner
+

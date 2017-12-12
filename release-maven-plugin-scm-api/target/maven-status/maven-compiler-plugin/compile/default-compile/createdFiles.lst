@@ -1,0 +1,7 @@
+ch\sourcepond\maven\release\scm\ProposedTag.class
+ch\sourcepond\maven\release\scm\spi\SCMBuilder.class
+ch\sourcepond\maven\release\scm\SCMRepository.class
+ch\sourcepond\maven\release\scm\ProposedTagsBuilder.class
+ch\sourcepond\maven\release\scm\ProposedTags.class
+ch\sourcepond\maven\release\scm\spi\SCMBuilderFactory.class
+ch\sourcepond\maven\release\scm\SCMException.class

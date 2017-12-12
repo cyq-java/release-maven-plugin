@@ -1,0 +1,229 @@
+## Velocity treats double hashes as comments, which messes with markdown files. So $H can be used instead.
+#set( $H = '#' )
+
+Usage
+-----
+
+Add the plugin to your pom:
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <releaseGoals>
+                        <releaseGoal>deploy</releaseGoal>
+                    </releaseGoals>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+And then call the plugin:
+
+	mvn releaser:release
+
+You can also optionally supply your own build numbers if you do not want an automatically incrementing number:
+
+    mvn releaser:release -DbuildNumber=1234
+
+Running a partial release
+-------------------------
+
+It is possible to release a single module (and any modules it depends on) by using the `modulesToRelease` parameter.
+For example:
+
+	mvn releaser:release -DmodulesToRelease=MyApp
+
+In this case the `MyApp` module will be built, released and tagged. If MyApp depends on another module, than that module will
+also be built and released (but there will be no Git tag for this).
+
+Note that this is not generally required as the plugin will only deploy changed modules by default anyway.
+
+Forcing a release
+-----------------
+It is possible to force the release of one or more specified modules, for example if the changes have not been picked up due to some issue.
+To do this, use the `forceRelease` parameter. For example:
+
+	mvn releaser:release -DforceRelease=MyApp
+
+In this case the `MyApp` module will be built, even if there where no changes found.
+
+Specify custom global/user Maven settings for release build
+-----------------------------------------------------------
+Sometimes it's necessary to specify custom Maven settings for the release build. This can be done with the optional plugin properties 
+**globalSettings** (defaults to `$M2_HOME/conf/settings.xml`) and **userSettings** (defaults to `${user.home}/.m2/settings.xml`). 
+These properties are used to specify the path to a custom Maven settings file:
+
+	<plugin>
+		...
+		<configuration>
+			<userSettings>/path/to/my/settings.xml</userSettings>
+		</configuration>
+	</plugin>	
+
+Or
+
+	<plugin>
+		...
+		<configuration>
+			<globalSettings>/path/to/global/settings.xml</globalSettings>
+		</configuration>
+	</plugin>
+	
+Or both
+
+	<plugin>
+		...
+		<configuration>
+			<globalSettings>/path/to/global/settings.xml</globalSettings>
+			<userSettings>/path/to/my/settings.xml</userSettings>
+		</configuration>
+	</plugin>
+	
+Note: properties from user settings always _override_ those derived from global settings, see <https://maven.apache.org/settings.html#Quick_Overview>
+for further information.
+
+SSH authentication
+------------------
+Currently, only public key authentication is supported. By default, the plugin reads the private key from `~/.ssh/id_rsa`. 
+If it's required to use a private key file from another location, you have two opportunities to achieve this:
+
+$H$H$H Add server section to your Maven settings
+
+This is the preferred way. Firstly, add a server section to your Maven settings 
+like this (see <https://maven.apache.org/settings.html#Servers> for further information):
+
+	<settings>
+		<servers>
+			<server>
+				<id>my-server</id>
+				<privateKey>/path/to/your/private_key</privateKey>
+				<passphrase>optional_passphrase</passphrase> <!-- This is optional -->
+			</server>
+		</servers>
+	</settings>
+	
+If your key is password protected, specify the password within element **passphrase**. Tip: do _not confuse_ this with element **password**.
+
+Secondly, specify the `serverId` in the plugin configuration
+	
+	<plugin>
+		...
+		<configuration>
+			<serverId>my-server</serverId>
+		</configuration>
+	</plugin>	
+
+
+$H$H$H Specify private key and optional passphrase in your POM
+
+This is the insecure way to specify your custom private key. Add following properties to your plugin configuration:
+
+	<plugin>
+		...
+		<configuration>
+			<privateKey>/path/to/your/private_key</privateKey>
+			<passphrase>optional_passphrase</passphrase> <!-- This is optional -->
+		</configuration>
+	</plugin>
+
+Note: POM configuration has precedence over Maven settings.
+	
+Custom known_hosts
+------------------
+Per default, the plugin uses `~/.ssh/known_hosts`. You can override this with following property in
+your plugin configuration:
+
+	<plugin>
+		...
+		<configuration>
+			<knownHosts>/path/to/your/known_hosts</knownHosts>
+		</configuration>
+	</plugin>
+
+Note: Maven settings related to `known_hosts` will _not_ be considered by the plugin.
+
+Automatic snapshot increment
+----------------------------
+Like the [maven-release-plugin](http://maven.apache.org/maven-release/maven-release-plugin), the ${project.artifactId} supports to increment the snapshot versions
+of all released artifacts. This is especially useful if you work with version ranges in you projects. Suppose you have a project **A** which depends on project **B**. Furthermore,
+suppose project **A** needs project **B** in version >= 1.0 and < 2.0. In this case, you would add following dependency to project **A**:
+
+	<dependency>
+		<groupId>org.foo</groupId>
+		<artifactId>B</groupId>
+		<version>[0.999,1.999)</version>
+	</dependency>
+
+Note: Why [0.999,1.999) and not [1.0,2.0) you ask? Short answer: because Maven currently (3.3.9) does not support version ranges well; since Maven 3, SNAPSHOTS are included when version
+ranges are resolved. Following explanation will not cover details about how to implement a proper deployment process with version ranges, but, you can find interesting solutions 
+in the discussion section of (https://issues.apache.org/jira/browse/MNG-3092) (attention: long read!).
+
+Now, you would like to release project **B** which currently has version 1.0-SNAPSHOT. Project **A** is already released and remains untouched. After release, you have two artifacts in your 
+Maven repository: **B:1.0-SNAPSHOT** and **B:1.0.0**. After this, project **A** references **B:1.0.0** because a release is
+always newer than a SNAPSHOT, which means that **1.0.0** is newer than **1.0-SNAPSHOT**.
+
+This behavior causes troubles when you want to realize a (deployment-) process like this:
+
+* One time, you want to resolve **B:1.0-SNAPSHOT** because you are deploying to a development system.
+* Another time, you want to resolve **B:1.0.0** because you are deploying to production system.
+
+To achieve this, you cannot work with the *major.minor-SNAPSHOT* scheme in your projects and let the plugin simply add a build-number. The reason is, 
+that the development deployment process will always reference the latest release. In other words, your latest SNAPSHOT will never be deployed again after the first release.
+To avoid this, you firstly need to work with the same version scheme for SNAPSHOTs like for releases. For instance, if you want to release project **B** with version **1.0.0**,
+the SNAPSHOT version before that release must be **1.0.0-SNAPSHOT** (this differs to the default use-case of this plugin). Secondly, you need to enable following configuration
+parameter:
+
+	<plugin>
+		...
+		<configuration>
+			<incrementSnapshotVersionAfterRelease>true</incrementSnapshotVersionAfterRelease>
+		</configuration>
+	</plugin>	
+
+If enabled, the plugin will perform additional actions after the release had been done. For the scenario above, following would happen:
+
+* Update the version of project **B** to **1.0.1-SNAPSHOT**
+* Commit and push the changes to the SCM repository with a specified comment
+
+In this mode, the release plugin will base the next build-number on the micro-version of the SNAPSHOT version incremented by 1. You can override this by specifying a build-number which
+is greater than the micro-version, see "Usage" section of this document. 
+
+$H$H$H Partial release of modules when automatic snapshot increment is enabled
+
+The ${project.artifactId} will take care of what needs to be released and which dependencies need to be updated. Suppose you have a multi-module project **parent** with a module **A** and
+a module **B** where both modules have their own parent. Both modules have version "1.0.0-SNAPSHOT" and module **B** depends on module **A**. 
+To achieve this, you would add following dependency to module **B**:
+
+	<dependency>
+		<groupId>org.foo</groupId>
+		<artifactId>A</groupId>
+		<version>1.0.0-SNAPSHOT</version>
+	</dependency>
+	
+Now, you release the whole project including **parent**, **A** and **B**. After release, the ${project.artifactId} will take following actions:
+
+* Update the version of project **parent** to **1.0.1-SNAPSHOT**
+* Update the version of module **A** to **1.0.1-SNAPSHOT**
+* Update the version of module **B** to **1.0.1-SNAPSHOT**
+* In module **B**, update the dependency to module **A** with version **1.0.1-SNAPSHOT**
+* Commit and push the changes to the SCM repository with a specified comment
+
+Some time later, you would like to release your work on project **B**. Since the last release, all introduced changes only affected module **B**. You could now think, that
+**parent** and **A** will also be released because the plugin pushed their incremented SNAPSHOT-versions changes during last release to the SCM repository. 
+This will *not* happen, because the plugin detects that effectively only module **B** has been changed. This means that the plugin ignores its own changes when it
+calculates which modules need to be released. In our example, the plugin would walk through following steps during release:
+
+* Detect that only module **B** has effectively been changed
+* In module **B**, update the dependency to module **A** with the latest release version **1.0.0**
+* Update the version of module **B** to **1.0.1**
+* Perform tagging and releasing of module **B**
+* Update the version of module **B** to **1.0.2-SNAPSHOT**
+* In module **B**, update the dependency to module **A** with the latest SNAPSHOT version **1.0.1-SNAPSHOT**
+* Commit and push the changes to the SCM repository with a specified comment
+
+As you can see, only module **B** will be processed, project **parent** and module **A** will not be touched at all. This kind of change control also works with
+dependencies to parent poms.
