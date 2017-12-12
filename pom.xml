@@ -17,7 +17,7 @@
 	</prerequisites>
 
 	<modules>
-		<module>release-maven-plugin</module>
+		<!-- <module>release-maven-plugin</module> -->
 		<module>release-maven-plugin-commons</module>
 		<module>release-maven-plugin-scm-api</module>
 		<module>release-maven-plugin-scm-git</module>
@@ -69,6 +69,7 @@
 	<scm>
 		<url>https://${repository.path}.git</url>
 		<connection>scm:git:git@${repository.path}.git</connection>
+		<tag>v1.0</tag>
 	</scm>
 
 	<inceptionYear>2016</inceptionYear>
@@ -82,66 +83,7 @@
 		</developer>
 	</developers>
 
-	<profiles>
-		<profile>
-			<id>release</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>${nexus-staging-maven-plugin}</version>
-						<extensions>true</extensions>
-						<configuration>
-							<serverId>release</serverId>
-							<nexusUrl>http://localhost:8081/nexus/</nexusUrl>
-							<autoReleaseAfterClose>true</autoReleaseAfterClose>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-source-plugin</artifactId>
-						<version>${maven-source-plugin}</version>
-						<executions>
-							<execution>
-								<id>attach-sources</id>
-								<goals>
-									<goal>jar-no-fork</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>${maven-javadoc-plugin}</version>
-						<executions>
-							<execution>
-								<id>attach-javadocs</id>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<version>${maven-gpg-plugin}</version>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+
 
 	<build>
 		<pluginManagement>
