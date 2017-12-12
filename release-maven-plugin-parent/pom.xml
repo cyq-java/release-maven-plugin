@@ -45,7 +45,7 @@
 
 		<!-- Configuration properties -->
 		<self.artifactId.extension>self</self.artifactId.extension>
-		<repository.path>github.com:SourcePond/${project.artifactId}</repository.path>
+		<repository.path>https://github.com/cyq-java/release-maven-plugin.git</repository.path>
 		<source.level>1.8</source.level>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
